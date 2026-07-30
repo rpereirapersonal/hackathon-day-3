@@ -1,0 +1,16 @@
+[project]
+name = "market-signal-agent"
+version = "0.1.0"
+description = "Evidence-grounded market signal agent over RBA, ASX and AFR data"
+requires-python = ">=3.12"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools]
+packages = ["src", "src.tools", "evals"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

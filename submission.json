@@ -1,0 +1,8 @@
+{
+  "_note": "TODO before submission: fill every field below. The endpoint must be re-verified from OFF-HOST at the declared commit SHA immediately before submitting, because tunnel URLs are typically ephemeral across restarts (DEP-1, DEP-3). Delete this note.",
+  "team_name": "",
+  "repository": "",
+  "commit_sha": "",
+  "agent_endpoint": "",
+  "fine_tuned_model_endpoint": ""
+}

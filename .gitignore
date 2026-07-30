@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Project-specific ---
+# Ingested artifacts, rebuilt by scripts/ingest.py (BLK-2). Never committed:
+# they are derived, large, and the source datasets must not be redistributed.
+data/*
+!data/.gitkeep
+!data/README.md
+
+# Diagnostic logs. Curated non-sensitive traces for logs/ are added explicitly
+# with `git add -f` before submission (brief §8); the raw stream is not.
+logs/*
+!logs/.gitkeep
+!logs/README.md
+
+# Hidden evaluation material must never be committed (NFR-6.3).
+public_questions.jsonl
