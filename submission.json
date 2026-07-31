@@ -1,8 +1,8 @@
 {
   "_note": "TODO before submitting: (1) set team_id/team_name, (2) confirm agent.endpoint is this host's IP as reachable FROM THE HARNESS MACHINE - never localhost - and re-verify it off-host, (3) set commit_sha to the exact 40-char hash being judged, (4) model.endpoint :8001 and model_name 'nemotron-finance-lora' are DECLARED BUT NOT YET SERVING - nothing listens on 8001 and DOMAIN_FT_* in .env still points at the base Qwen on 8000. Stand the adapter up and verify both before submitting, or this field is a false claim. Delete this note.",
   "schema_version": "1.0",
-  "team_id": "cognitivo-g11",
-  "team_name": "Cognitivo G11",
+  "team_id": "team_19",
+  "team_name": "TMBL X",
   "github_url": "https://github.com/rpereirapersonal/hackathon-day-3",
   "commit_sha": "55c59002aaa56bfd98ef8820b2e3305c70aff047",
   "agent": {
