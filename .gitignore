@@ -237,5 +237,24 @@ logs/*
 !logs/.gitkeep
 !logs/README.md
 
-# Hidden evaluation material must never be committed (NFR-6.3).
+# Hidden evaluation material must never be committed (NFR-6.3). The supplied
+# public calibration set is explicitly required in the submitted tree by the
+# submission guide's Required Repository Structure, so it is excepted — it is
+# published material, not hidden grading data.
 public_questions.jsonl
+!Participant_Package/public_questions.jsonl
+
+# --- Fine-tuning artifacts (training/) ---
+# The LoRA weights are 321 MB, over GitHub's 100 MB hard limit, and git-lfs is
+# not installed. Everything a judge needs to assess the fine-tune is committed:
+# adapter_config.json (rank, alpha, target modules), the tokenizer, the loss
+# curve in log_history.json, eval/train metrics, and the base-vs-fine-tuned
+# comparisons. The weights themselves are assessed via the live model endpoint
+# registered in submission.json.
+training/checkpoints/**/*.safetensors
+training/checkpoints/**/*.bin
+training/checkpoints/**/optimizer.pt
+
+# Intermediate training state: ~4.8 GB of per-step checkpoints and optimizer
+# shards. Reproduction inputs (scripts, data, config) are committed instead.
+training/checkpoints/*/hf_run/

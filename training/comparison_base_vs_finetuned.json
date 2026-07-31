@@ -1,0 +1,62 @@
+[
+  {
+    "question": "Question: What was the RBA cash rate target on 2018-09-05?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2018-09-05\"}, \"result\": {\"effective_date\": \"2018-09-05\", \"cash_rate_target_pct\": 1.5}}\n\nWrite the final answer.",
+    "gold": "On 2018-09-05, the RBA cash rate target was 1.50%.",
+    "base_answer": "The RBA cash rate target on 2018-09-05 was 1.5%.",
+    "finetuned_answer": "On 2018-09-05, the RBA cash rate target was 1.50%."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2015-03-04?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2015-03-04\"}, \"result\": {\"effective_date\": \"2015-03-04\", \"cash_rate_target_pct\": 2.25}}\n\nWrite the final answer.",
+    "gold": "On 2015-03-04, the RBA cash rate target was 2.25%.",
+    "base_answer": "The RBA cash rate target on 2015-03-04 was 2.25%.",
+    "finetuned_answer": "On 2015-03-04, the RBA cash rate target was 2.25%."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2011-03-02?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2011-03-02\"}, \"result\": {\"effective_date\": \"2011-03-02\", \"cash_rate_target_pct\": 4.75}}\n\nWrite the final answer.",
+    "gold": "On 2011-03-02, the RBA cash rate target was 4.75%.",
+    "base_answer": "The RBA cash rate target on 2011-03-02 was 4.75%.",
+    "finetuned_answer": "On 2011-03-02, the RBA cash rate target was 4.75%."
+  },
+  {
+    "question": "Question: What was Qantas's annual return in 2018?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"Qantas\", \"year\": \"2018\"}, \"result\": {\"ticker\": \"Qantas\", \"year\": \"2018\", \"start_date\": \"2018-01-02\", \"end_date\": \"2018-12-31\", \"open\": 4.3755, \"close\": 5.1478, \"return_pct\": 17.65}}\n\nWrite the final answer.",
+    "gold": "Qantas gained 17.65% in 2018, moving from an opening price of 4.38 on 2018-01-02 to a closing price of 5.15 on 2018-12-31.",
+    "base_answer": "Qantas's annual return in 2018 was 17.65%.",
+    "finetuned_answer": "Qantas gained 17.65% in 2018, moving from an opening price of 4.38 on 2018-01-02 to a closing price of 5.15 on 2018-12-31."
+  },
+  {
+    "question": "Question: How many AFR articles in this sample mention \"housing\"?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"afr\", \"metric\": \"count\", \"args\": {\"pattern\": \"housing\"}, \"result\": {\"pattern\": \"housing\", \"matching_articles\": 1028, \"articles_scanned\": 17918}}\n\nWrite the final answer.",
+    "gold": "1028 of the 17918 scanned AFR articles mention \"housing\" (matched case-insensitively as a whole word across HEADLINE, SUBHEAD, INTRO, and TEXT, counted once per article).",
+    "base_answer": "Based on the verified tool results, there are 1028 AFR articles in the sample that mention \"housing.\"",
+    "finetuned_answer": "1028 of the 17918 sampled AFR articles mention \"housing\" (matched case-insensitively across scanned text)."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2022-04-06?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2022-04-06\"}, \"result\": {\"effective_date\": \"2022-04-06\", \"cash_rate_target_pct\": 0.1}}\n\nWrite the final answer.",
+    "gold": "On 2022-04-06, the RBA cash rate target was 0.10%.",
+    "base_answer": "The RBA cash rate target on 2022-04-06 was 10.0% of the average weekly CPI, as indicated by the cash rate target percentage of 0.1 (or 10%) in the verified tool result.",
+    "finetuned_answer": "On 2022-04-06, the RBA cash rate target was 0.10%."
+  },
+  {
+    "question": "Question: What was BHP's annual return in 2020?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"BHP\", \"year\": \"2020\"}, \"result\": {\"ticker\": \"BHP\", \"year\": \"2020\", \"start_date\": \"2020-01-02\", \"end_date\": \"2020-12-31\", \"open\": 22.1614, \"close\": 25.6965, \"return_pct\": 15.95}}\n\nWrite the final answer.",
+    "gold": "BHP gained 15.95% in 2020, moving from an opening price of 22.16 on 2020-01-02 to a closing price of 25.70 on 2020-12-31.",
+    "base_answer": "BHP's annual return in 2020 was 15.95%.",
+    "finetuned_answer": "BHP gained 15.95% in 2020, moving from an opening price of 22.16 on 2020-01-02 to a closing price of 25.70 on 2020-12-31."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2026-03-18?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2026-03-18\"}, \"result\": {\"effective_date\": \"2026-03-18\", \"cash_rate_target_pct\": 4.1}}\n\nWrite the final answer.",
+    "gold": "On 2026-03-18, the RBA cash rate target was 4.10%.",
+    "base_answer": "The RBA cash rate target on 2026-03-18 was 4.1%.",
+    "finetuned_answer": "On 2026-03-18, the RBA cash rate target was 4.10%."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2013-09-04?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2013-09-04\"}, \"result\": {\"effective_date\": \"2013-09-04\", \"cash_rate_target_pct\": 2.5}}\n\nWrite the final answer.",
+    "gold": "On 2013-09-04, the RBA cash rate target was 2.50%.",
+    "base_answer": "The RBA cash rate target on 2013-09-04 was 2.5%.",
+    "finetuned_answer": "On 2013-09-04, the RBA cash rate target was 2.50%."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2011-08-03?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2011-08-03\"}, \"result\": {\"effective_date\": \"2011-08-03\", \"cash_rate_target_pct\": 4.75}}\n\nWrite the final answer.",
+    "gold": "On 2011-08-03, the RBA cash rate target was 4.75%.",
+    "base_answer": "The RBA cash rate target on 2011-08-03 was 4.75%.",
+    "finetuned_answer": "On 2011-08-03, the RBA cash rate target was 4.75%."
+  }
+]

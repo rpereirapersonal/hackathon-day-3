@@ -1,0 +1,92 @@
+[
+  {
+    "question": "Question: What was Transurban's annual return in 2017?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"Transurban\", \"year\": \"2017\"}, \"result\": {\"ticker\": \"Transurban\", \"year\": \"2017\", \"start_date\": \"2017-01-03\", \"end_date\": \"2017-12-29\", \"open\": 6.9012, \"close\": 8.6656, \"return_pct\": 25.57}}\n\nWrite the final answer.",
+    "gold": "Transurban gained 25.57% in 2017, moving from an opening price of 6.90 on 2017-01-03 to a closing price of 8.67 on 2017-12-29.",
+    "base_answer": "Transuran's annual return in 2017 was 25.57%. This is based on the verified tool result, which shows that the company's stock price opened at $6.9012 and closed at $8.6656 on the specified dates, resulting in a return percentage of 25.57%.",
+    "finetuned_answer": "Transurban gained 25.57% in 2017, moving from an opening price of 6.90 on 2017-01-03 to a closing price of 8.67 on 2017-12-29."
+  },
+  {
+    "question": "Question: In 2020, how many RBA cash-rate changes were there, and how did ANZ perform on the ASX that year?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"rba\": {\"year\": \"2020\", \"changes\": 3, \"increases\": 0, \"decreases\": 3}, \"asx\": {\"ticker\": \"ANZ\", \"year\": \"2020\", \"return_pct\": -4.13, \"start_date\": \"2020-01-02\", \"end_date\": \"2020-12-31\"}}\n\nWrite the final answer.",
+    "gold": "In 2020, the RBA made 3 cash-rate changes (0 increases, 3 decreases), while ANZ lost 4.13% on the ASX (from 2020-01-02 to 2020-12-31).",
+    "base_answer": "In 2020, there were 3 changes in the RBA cash-rate. ANZ performed with a return of -4.13% on the ASX that year, from January 2nd to December 31st.",
+    "finetuned_answer": "In 2020, the RBA made 3 cash-rate changes (0 increases, 3 decreases), while ANZ lost 4.13% on the ASX (from 2020-01-02 to 2020-12-31)."
+  },
+  {
+    "question": "Question: What was Suncorp's annual return in 2018?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"Suncorp\", \"year\": \"2018\"}, \"result\": {\"ticker\": \"Suncorp\", \"year\": \"2018\", \"start_date\": \"2018-01-02\", \"end_date\": \"2018-12-31\", \"open\": 10.8705, \"close\": 10.502, \"return_pct\": -3.39}}\n\nWrite the final answer.",
+    "gold": "Suncorp lost 3.39% in 2018, moving from an opening price of 10.87 on 2018-01-02 to a closing price of 10.50 on 2018-12-31.",
+    "base_answer": "The annual return for Suncorp in 2018 was -3.39%. This indicates a decrease in the company's stock value from its opening price of $10.87 to its closing price of $10.50 over the course of the year.",
+    "finetuned_answer": "Suncorp lost 3.39% in 2018, moving from an opening price of 10.87 on 2018-01-02 to a closing price of 10.50 on 2018-12-31."
+  },
+  {
+    "question": "Question: How did Cromwell perform on the ASX in 2016, in percentage return terms?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"Cromwell\", \"year\": \"2016\"}, \"result\": {\"ticker\": \"Cromwell\", \"year\": \"2016\", \"start_date\": \"2016-01-04\", \"end_date\": \"2016-12-30\", \"open\": 0.4557, \"close\": 0.4695, \"return_pct\": 3.02}}\n\nWrite the final answer.",
+    "gold": "Cromwell gained 3.02% in 2016, moving from an opening price of 0.46 on 2016-01-04 to a closing price of 0.47 on 2016-12-30.",
+    "base_answer": "Cromwell performed a 3.02% annual return on the ASX in 2016. The open price on the start date, January 4, 2016, was AUD 0.4557, and the close price on the end date, December 30, 2016, was AUD 0.4695.",
+    "finetuned_answer": "Cromwell gained 3.02% in 2016, moving from an opening price of 0.46 on 2016-01-04 to a closing price of 0.47 on 2016-12-30."
+  },
+  {
+    "question": "Question: What cash rate target did the RBA set effective 2016-05-04?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2016-05-04\"}, \"result\": {\"effective_date\": \"2016-05-04\", \"cash_rate_target_pct\": 1.75}}\n\nWrite the final answer.",
+    "gold": "On 2016-05-04, the RBA cash rate target was 1.75%.",
+    "base_answer": "The RBA set an effective cash rate target of 1.75% on 2016-05-04.",
+    "finetuned_answer": "On 2016-05-04, the RBA cash rate target was 1.75%."
+  },
+  {
+    "question": "Question: What was the RBA cash rate target on 2011-06-08?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2011-06-08\"}, \"result\": {\"effective_date\": \"2011-06-08\", \"cash_rate_target_pct\": 4.75}}\n\nWrite the final answer.",
+    "gold": "On 2011-06-08, the RBA cash rate target was 4.75%.",
+    "base_answer": "The RBA cash rate target on 2011-06-08 was 4.75%.",
+    "finetuned_answer": "On 2011-06-08, the RBA cash rate target was 4.75%."
+  },
+  {
+    "question": "Question: On 2011-02-02, what was the RBA's official cash rate target?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2011-02-02\"}, \"result\": {\"effective_date\": \"2011-02-02\", \"cash_rate_target_pct\": 4.75}}\n\nWrite the final answer.",
+    "gold": "On 2011-02-02, the RBA cash rate target was 4.75%.",
+    "base_answer": "On 2011-02-02, the official cash rate target set by the Reserve Bank of Australia (RBA) was 4.75%.",
+    "finetuned_answer": "On 2011-02-02, the RBA cash rate target was 4.75%."
+  },
+  {
+    "question": "Question: On 2017-05-03, what was the RBA's official cash rate target?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2017-05-03\"}, \"result\": {\"effective_date\": \"2017-05-03\", \"cash_rate_target_pct\": 1.5}}\n\nWrite the final answer.",
+    "gold": "On 2017-05-03, the RBA cash rate target was 1.50%.",
+    "base_answer": "The official cash rate target of the Reserve Bank of Australia (RBA) on 2017-05-03 was 1.5%.",
+    "finetuned_answer": "On 2017-05-03, the RBA cash rate target was 1.50%."
+  },
+  {
+    "question": "Question: How many AFR articles in this sample mention \"Telstra\"?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"afr\", \"metric\": \"count\", \"args\": {\"pattern\": \"Telstra\"}, \"result\": {\"pattern\": \"Telstra\", \"matching_articles\": 2266, \"articles_scanned\": 83730}}\n\nWrite the final answer.",
+    "gold": "2266 of the 83730 scanned AFR articles mention \"Telstra\" (matched case-insensitively as a whole word across HEADLINE, SUBHEAD, INTRO, and TEXT, counted once per article).",
+    "base_answer": "The sample contains 2266 AFR articles that mention \"Telstra\".",
+    "finetuned_answer": "2266 of the 83730 scanned AFR articles mention \"Telstra\" (matched case-insensitively as a whole word across HEADLINE, SUBHEAD, INTRO, and TEXT, counted once per article)."
+  },
+  {
+    "question": "Question: What was Rio's annual return in 2018?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"Rio\", \"year\": \"2018\"}, \"result\": {\"ticker\": \"Rio\", \"year\": \"2018\", \"start_date\": \"2018-01-02\", \"end_date\": \"2018-12-31\", \"open\": 42.1781, \"close\": 45.9155, \"return_pct\": 8.86}}\n\nWrite the final answer.",
+    "gold": "Rio gained 8.86% in 2018, moving from an opening price of 42.18 on 2018-01-02 to a closing price of 45.92 on 2018-12-31.",
+    "base_answer": "Rio's annual return in 2018 was 8.86%. The open price on the first trading day of the year was $42.18, and the close price on the last trading day of the year was $45.92.",
+    "finetuned_answer": "Rio gained 8.86% in 2018, moving from an opening price of 42.18 on 2018-01-02 to a closing price of 45.92 on 2018-12-31."
+  },
+  {
+    "question": "Question: What cash rate target did the RBA set effective 2016-04-06?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2016-04-06\"}, \"result\": {\"effective_date\": \"2016-04-06\", \"cash_rate_target_pct\": 2.0}}\n\nWrite the final answer.",
+    "gold": "On 2016-04-06, the RBA cash rate target was 2.00%.",
+    "base_answer": "The RBA set a cash rate target of 2.0% effective on 2016-04-06.",
+    "finetuned_answer": "On 2016-04-06, the RBA cash rate target was 2.00%."
+  },
+  {
+    "question": "Question: What was QBE's annual return in 2020?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"annual_return\", \"args\": {\"ticker\": \"QBE\", \"year\": \"2020\"}, \"result\": {\"ticker\": \"QBE\", \"year\": \"2020\", \"start_date\": \"2020-01-02\", \"end_date\": \"2020-12-31\", \"open\": 10.3562, \"close\": 7.069, \"return_pct\": -31.74}}\n\nWrite the final answer.",
+    "gold": "QBE lost 31.74% in 2020, moving from an opening price of 10.36 on 2020-01-02 to a closing price of 7.07 on 2020-12-31.",
+    "base_answer": "The annual return for QBE in 2020 was -31.74%. This indicates a significant decrease in the company's stock value from its opening price of $10.3562 on January 2, 2020, to its closing price of $7.069 on December 31, 2020.",
+    "finetuned_answer": "QBE lost 31.74% in 2020, moving from an opening price of 10.36 on 2020-01-02 to a closing price of 7.07 on 2020-12-31."
+  },
+  {
+    "question": "Question: What was NAB's annualized volatility over the full available sample?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"asx\", \"metric\": \"volatility\", \"args\": {\"ticker\": \"NAB\"}, \"result\": {\"ticker\": \"NAB\", \"annualized_volatility_pct\": 23.6}}\n\nWrite the final answer.",
+    "gold": "NAB's annualized volatility (based on daily close-to-close returns) over the full sample was 23.60%.",
+    "base_answer": "The annualized volatility of NAB over the full available sample is 23.6%.",
+    "finetuned_answer": "NAB's annualized volatility (based on daily close-to-close returns) over the full sample was 23.60%."
+  },
+  {
+    "question": "Question: On 2021-02-03, what was the RBA's official cash rate target?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2021-02-03\"}, \"result\": {\"effective_date\": \"2021-02-03\", \"cash_rate_target_pct\": 0.1}}\n\nWrite the final answer.",
+    "gold": "On 2021-02-03, the RBA cash rate target was 0.10%.",
+    "base_answer": "On 2021-02-03, the official cash rate target set by the Reserve Bank of Australia (RBA) was 10.0%. This information is based on the verified tool result provided, which specifies the cash rate target percentage as 0.1 (equivalent to 10.0%) for the given date.",
+    "finetuned_answer": "On 2021-02-03, the RBA cash rate target was 0.10%."
+  },
+  {
+    "question": "Question: On 2015-03-04, what was the RBA's official cash rate target?\n\nVerified tool result (from agent runtime, already executed against raw data):\n{\"dataset\": \"rba\", \"metric\": \"lookup_rate\", \"args\": {\"date\": \"2015-03-04\"}, \"result\": {\"effective_date\": \"2015-03-04\", \"cash_rate_target_pct\": 2.25}}\n\nWrite the final answer.",
+    "gold": "On 2015-03-04, the RBA cash rate target was 2.25%.",
+    "base_answer": "The official cash rate target of the Reserve Bank of Australia (RBA) on 2015-03-04 was 2.25%.",
+    "finetuned_answer": "On 2015-03-04, the RBA cash rate target was 2.25%."
+  }
+]
