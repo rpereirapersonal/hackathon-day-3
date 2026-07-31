@@ -1,8 +1,18 @@
 {
-  "_note": "TODO before submission: fill every field below. The endpoint must be re-verified from OFF-HOST at the declared commit SHA immediately before submitting, because tunnel URLs are typically ephemeral across restarts (DEP-1, DEP-3). Delete this note.",
-  "team_name": "",
-  "repository": "",
-  "commit_sha": "",
-  "agent_endpoint": "",
-  "fine_tuned_model_endpoint": ""
+  "_note": "TODO before submitting: (1) set team_id/team_name, (2) confirm agent.endpoint is this host's IP as reachable FROM THE HARNESS MACHINE - never localhost - and re-verify it off-host, (3) set commit_sha to the exact 40-char hash being judged, (4) point model.endpoint at the fine-tuned adapter once served. Delete this note.",
+  "schema_version": "1.0",
+  "team_id": "cognitivo-g11",
+  "team_name": "Cognitivo G11",
+  "github_url": "https://github.com/rpereirapersonal/hackathon-day-3",
+  "commit_sha": "55c59002aaa56bfd98ef8820b2e3305c70aff047",
+  "agent": {
+    "endpoint": "http://10.0.1.10:5000",
+    "health_path": "/health",
+    "query_path": "/query",
+    "timeout_seconds": 300
+  },
+  "model": {
+    "endpoint": "http://10.0.1.10:8000/v1",
+    "model_name": "Qwen/Qwen3.6-35B-A3B-Instruct-FP8"
+  }
 }

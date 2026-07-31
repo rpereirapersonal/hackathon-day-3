@@ -312,8 +312,12 @@ Every run ends with the reference-count check and exits non-zero if it fails.
 ### 4. Serve
 
 ```bash
-uvicorn src.api:app --host 0.0.0.0 --port 8000
+uvicorn src.api:app --host 0.0.0.0 --port 5000
 ```
+
+Port 5000, not 8000: the supplied vLLM already holds 8000, and binding the agent there would
+either fail to start or shadow the model gateway the agent itself calls. The port here must match
+`agent.endpoint` in `submission.json`.
 
 Bind `0.0.0.0`, not `127.0.0.1` (DEP-5) — a loopback-bound service is invisible to the tunnel
 and fails the health gate.
@@ -322,7 +326,7 @@ Run it under a session-independent supervisor so a dropped SSH connection cannot
 endpoint mid-evaluation (DEP-2):
 
 ```bash
-tmux new -s agent -d 'uvicorn src.api:app --host 0.0.0.0 --port 8000'
+tmux new -s agent -d 'uvicorn src.api:app --host 0.0.0.0 --port 5000'
 ```
 
 ### 5. Expose and verify

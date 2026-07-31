@@ -22,14 +22,26 @@ import time
 import uuid
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src import embeddings, frames
-from src.config import load_settings
-from src.context import QueryContext
-from src.graph import graph
-from src.schemas import HealthResponse, QueryRequest, QueryResponse, TraceEntry
+# Before any module reads the environment. ``uvicorn src.api:app`` imports this
+# module directly, with no shell wrapper to source ``.env`` first, so without
+# this the process dies at import on a missing AGENT_BRAIN_MODEL. Real exported
+# variables still win — ``load_dotenv`` does not override what is already set.
+load_dotenv()
+
+from src import embeddings, frames  # noqa: E402
+from src.config import load_settings  # noqa: E402
+from src.context import QueryContext  # noqa: E402
+from src.graph import graph  # noqa: E402
+from src.schemas import (  # noqa: E402
+    HealthResponse,
+    QueryRequest,
+    QueryResponse,
+    TraceEntry,
+)
 
 logger = logging.getLogger(__name__)
 
