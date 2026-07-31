@@ -15,10 +15,12 @@ The separation is structural, not a matter of prompt obedience: this module
 binds the tool set to Qwen, ``synthesis.py`` binds no tools at all, and the
 ``synthesize`` node is terminal so nothing can route back here.
 
-Tool names and signatures are still blocked on the real dataset files (BLK-2),
-so the prompt below routes by *capability* and by dataset, and instructs the
-model to read the descriptions of whatever tools are actually bound. It does
-not name tools or assert column names, tickers or date formats.
+The prompt below routes by *capability* and by dataset rather than by tool
+name, and instructs the model to read the descriptions of whatever tools are
+actually bound. That was originally a hedge against unknown schemas; it is kept
+deliberately now that the eleven tools exist, because each tool's docstring
+already states what it cannot do and names the tool that can, so duplicating
+names here would give two places to keep in step and one to forget.
 
 Patterns follow https://docs.langchain.com/oss/python/langchain/agents.
 """
@@ -216,8 +218,7 @@ def build_orchestrator(
     Args:
         model: Chat model to use as the reasoning brain. Defaults to the
             configured Qwen ``agent-brain``. Tests pass a fake model here.
-        tools: Tool set to bind. Defaults to the ``TOOLS`` registry, which is
-            empty until the data layer lands (BLK-2).
+        tools: Tool set to bind. Defaults to the ``TOOLS`` registry.
         middleware: Middleware stack, outermost first. Defaults to the deadline
             guard, tool-budget cap and trace recorder.
 
@@ -227,13 +228,14 @@ def build_orchestrator(
     """
     resolved_tools = list(TOOLS) if tools is None else list(tools)
     if not resolved_tools:
-        # Expected while BLK-2 is open: the loop runs, requests nothing, and
-        # falls straight through to synthesis with no evidence. Loud, because
-        # silently answering from model priors is exactly the failure mode the
-        # brief's §10 examples describe.
+        # No longer an expected state: the registry is populated. If this fires,
+        # the loop will run, request nothing, and fall straight through to
+        # synthesis with no evidence — answering from model priors, which is
+        # exactly the failure mode the brief's §10 examples describe. Loud,
+        # because the resulting answers look plausible.
         logger.warning(
             "Reasoning agent built with an empty tool set - it cannot gather "
-            "evidence. Expected only before the data layer is ingested."
+            "evidence and will answer from model priors. Check src/tools."
         )
 
     return create_agent(

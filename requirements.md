@@ -1,4 +1,4 @@
-# Requirements — Agentic Layer
+﻿# Requirements — Agentic Layer
 
 Requirements for the agent application that hosts the team's fine-tuned model for the Cognitivo
 hackathon (July 2026). Scope is the **agentic layer only**: the HTTP service, the Qwen reasoning
@@ -62,7 +62,7 @@ directly (brief §6B).
 
 | ID | Requirement |
 | --- | --- |
-| FR-1.1 | `GET /health` returns HTTP 200 whenever the process is running. It MUST NOT call any language model, gateway or remote service, so that a slow or unavailable upstream cannot fail the gate. |
+| FR-1.1 | `GET /health` returns HTTP 200 with the body `{"status": "ok"}` whenever the process is running — the exact shape the organizers' submission guide documents. It MUST NOT call any language model, gateway or remote service, so that a slow or unavailable upstream cannot fail the gate. Additional diagnostic fields may accompany `status`, but never replace it. |
 | FR-1.2 | `POST /query` accepts one JSON object containing a single `question` field, per the brief's input contract (§4). |
 | FR-1.3 | `POST /query` returns one JSON object with `answer` (string, required), `steps` (integer, optional) and `tool_trace` (ordered array of `{tool, args, result}`, optional). `steps` and `tool_trace` are strongly recommended for organizer diagnostics (§5) and are therefore treated as required by this implementation. |
 | FR-1.4 | The `answer` field is always present and non-empty. Where evidence is insufficient, the limitation is stated in `answer`; the response is never empty and a figure is never invented (§9 rule 5). |
@@ -93,8 +93,9 @@ directly (brief §6B).
 
 ### FR-4 — Tool capability surface
 
-Specified by **capability**, not by column name or schema. The concrete signatures depend on the
-real dataset files, which are not yet available (see BLK-2).
+Specified by **capability**, not by column name or schema, so a change of source layout does not
+rewrite the requirement. All five are implemented; the concrete signatures are in `src/tools/`
+and the built surface is catalogued in `tool-backlog.md`.
 
 | ID | Requirement |
 | --- | --- |
@@ -123,6 +124,21 @@ real dataset files, which are not yet available (see BLK-2).
 | FR-6.2 | `tool_trace` is ordered and reflects real executions, including failed and rejected calls. |
 | FR-6.3 | Per-request diagnostic logs are written to `logs/` with a correlation id and per-stage timings, sufficient for organizers to diagnose a failed request (§8). |
 
+### FR-7 — Grading conformance
+
+Hidden questions are marked component by component against published tolerances, so numeric
+convention and completeness are functional requirements rather than matters of presentation. A
+value outside tolerance forfeits its component outright; it does not earn partial credit.
+
+| ID | Requirement |
+| --- | --- |
+| FR-7.1 | Every component a question explicitly asks for is answered separately. A three-part question answered in two parts forfeits the third, whatever the quality of the other two. |
+| FR-7.2 | Exact-match quantities — dates, tickers, counts, rankings, RBA rates and AFR counts — are reproduced exactly. |
+| FR-7.3 | Tolerance-bounded quantities stay inside their published band: ±0.02 percentage points for returns, drawdowns, volatility and percentage shares; ±0.001 for correlations; ±0.0001 for quoted closes; ±1 share for calculated average volume. |
+| FR-7.4 | Tools return more precision than the answer needs, so rounding happens once, at synthesis, and no tolerance is consumed by intermediate rounding. |
+| FR-7.5 | Where a financial convention could reasonably go two ways, the implementation adopts the one that reproduces the published reference value, and pins it with a test. This covers at minimum: a basket return as the arithmetic mean of constituent returns; an annual return measured first-to-last close within the year; a drawdown peak taken as the running maximum at the trough. |
+| FR-7.6 | An instruction to exclude a constituent — "excluding Tabcorp" — is applied to every derived statistic, and naming individual instruments in a request never silently redefines a basket. |
+
 ---
 
 ## 4. Non-functional requirements
@@ -143,7 +159,7 @@ question; >300s scores zero.
 
 | ID | Requirement |
 | --- | --- |
-| NFR-2.1 | The design targets ≤3 tool calls per question (§7). |
+| NFR-2.1 | The design targets ≤3 tool calls per question (§7). The hard cap is set at 5 rather than 3: the hardest cross-dataset questions need three different datasets, and a cap equal to the target leaves no room for the adaptive retry FR-3.6 requires. All tools are indexed reads, so the extra headroom costs milliseconds, not seconds. |
 | NFR-2.2 | A hard cap on tool calls and on graph recursion is enforced in code, not merely requested in a prompt. The brief warns that more than 5 loops will likely breach 60s (§7). |
 | NFR-2.3 | Exhausting the budget proceeds to synthesis with the evidence gathered so far; it does not error. |
 
@@ -169,8 +185,8 @@ question; >300s scores zero.
 | --- | --- |
 | NFR-5.1 | Dependencies are pinned; the setup and run procedure is documented in `README.md` and works from a clean checkout (§6B). |
 | NFR-5.2 | Module boundaries are single-responsibility, with explicit error handling and timeouts (§6B). |
-| NFR-5.3 | The repository contains the folders the brief requires: `src/`, `training/`, `logs/`, `Participant_Package/` (§8). |
-| NFR-5.4 | Automated tests cover the response contract, the role separation, the deterministic calculations, and the fallback paths, and run without contacting a live model. |
+| NFR-5.3 | The repository contains the folders the brief requires — `src/`, `training/`, `logs/`, `Participant_Package/` (§8) — and no others beyond the read-only source data directory and the gitignored artifact directory. Tests and the calibration harness live in `training/`. |
+| NFR-5.4 | Automated tests cover the response contract, the role separation, the deterministic calculations, and the fallback paths, and run without contacting a live model. Determinism tests assert against values published in `Participant_Package/public_questions.jsonl` rather than against this implementation's own output. |
 
 ### NFR-6 — Security and hygiene
 
@@ -194,8 +210,10 @@ harness.
 | DEP-2 | The service process survives an SSH session disconnect. A dropped terminal must not take down the health gate. |
 | DEP-3 | The endpoint URL recorded in `submission.json` matches the live endpoint at the declared commit SHA. Where the exposure mechanism issues an ephemeral URL, this is re-verified immediately before submission. |
 | DEP-4 | The pinned dependency set installs and runs on the host's `aarch64` architecture. Any dependency that cannot be satisfied there has a documented fallback that keeps the critical path working. |
-| DEP-5 | The service binds all interfaces rather than loopback, so the exposure mechanism can reach it. |
+| DEP-5 | The service binds all interfaces on port 5000 rather than loopback, so the exposure mechanism can reach it. Port 5000 is the organizers' documented convention; the harness calls whatever `agent.endpoint` declares, so the served port and the declared one must agree. |
 | DEP-6 | Startup order is documented and the service tolerates upstream model gateways that are not yet ready (per NFR-4.2). |
+| DEP-7 | `submission.json` conforms field-for-field to the organizers' `submission_template.json`: `schema_version`, `team_id`, `team_name`, `github_url`, `commit_sha`, `agent{endpoint, health_path, query_path, timeout_seconds}` and `model{endpoint, model_name}`. The harness reads these fields directly, so a differently-shaped file fails even though it is valid JSON. |
+| DEP-8 | The service starts unmodified under the organizers' environment-variable names (`LITELLM_BASE_URL`/`LITELLM_URL`, `LITELLM_KEY`, `BRAIN_MODEL`, `MAX_AGENT_STEPS`), which the supplied cluster exports. Configuration accepts each as an alias for its local equivalent; where both are set, the local name wins. |
 
 ---
 
@@ -223,8 +241,8 @@ Work that cannot be completed until external inputs arrive. Each names what it g
 
 | ID | Blocked on | Gates |
 | --- | --- | --- |
-| BLK-1 | **Participant Package** — `public_questions.jsonl`, `questions_template.json`, `answer_template.json`, `validate.json` | Calibration harness; the sample `answer_template.json` required in `Participant_Package/` (§8); contract validation against `validate.json`; acceptance criterion AC-9. |
-| BLK-2 | **RBA / ASX / AFR dataset files and their real schemas** | `scripts/ingest.py`, the whole `src/tools/` package, FR-4 signatures, the data-layer section of `architecture.md`. No column names, tickers or date formats are asserted anywhere until these are in hand. |
+| ~~BLK-1~~ | **Closed.** The Participant Package is present. | Was gating the calibration harness and AC-9. `run_calibration.py` is now unimplemented rather than blocked. |
+| ~~BLK-2~~ | **Closed.** All three datasets are present and their schemas are asserted in `src/ingest.py`. | Was gating the data layer. FR-4 is implemented across twelve tools, verified against published reference values. The one convention the data could not settle by inspection — how a term match is bounded — was settled by reproducing four published counts exactly; see `src/text.py`. |
 | BLK-3 | **`agent-brain` gateway base URL and credential** | Live Qwen planning. Until supplied, the reasoning loop is exercised against fake models in tests. |
 | BLK-4 | **`DOMAIN_FT_MODEL` endpoint and credential** | Live synthesis; `DOMAIN_PREDICT_MODE=llm`. Until supplied, `mock` mode covers integration. |
 | BLK-5 | **Ownership of the LiteLLM gateway** — organizer-hosted, or team-hosted on the Atom | Operational documentation and startup ordering only. No code impact: the gateway is a base URL plus credential behind environment variables in either case. |
@@ -245,11 +263,15 @@ Work that cannot be completed until external inputs arrive. Each names what it g
 | AC-6 | A question that would exceed the tool budget terminates at the cap and still returns a valid answer. | NFR-2 |
 | AC-7 | Three concurrent `POST /query` requests with distinguishable questions return three correctly matched responses, with no cross-contamination of `tool_trace`. | NFR-3 |
 | AC-8 | An artificially slowed pipeline hits the deadline and returns a degraded but valid answer rather than exceeding the latency band. | NFR-1.2 |
-| AC-9 | The 15 public calibration questions run end to end; per-question latency and per-component correctness are recorded. *(Blocked: BLK-1, BLK-2.)* | FR-4, NFR-1 |
+| AC-9 | The 15 public calibration questions run end to end; per-question latency and per-component correctness are recorded. *(Unblocked; awaiting the serving layer.)* | FR-4, NFR-1 |
+| AC-14 | `python -m src.ingest --verify` reproduces every published AFR reference count exactly and exits non-zero on any mismatch. | FR-3.4, FR-4.3 |
 | AC-10 | A secret scan over the tracked tree finds no keys, tokens, credentials or machine-specific paths. | NFR-6, CON-6 |
 | AC-11 | Setup and run instructions succeed from a clean checkout on the target `aarch64` host, and the endpoint answers from off-host. | NFR-5.1, DEP-1, DEP-4, DEP-5 |
 | AC-12 | The service refuses to start silently in `mock` mode: startup emits a prominent warning, and the README states the pre-evaluation switch to `llm`. | FR-5.5 |
 | AC-13 | No file maps a question id to an answer. | CON-9 |
+| AC-15 | Every published RBA and ASX reference value in `public_questions.jsonl` is reproduced by a direct tool call within its stated tolerance, including all six drawdown endpoint dates and the seventeen-member basket returns. | FR-3.4, FR-4.1, FR-4.2, FR-7 |
+| AC-16 | No public question needs more than three tool calls. Questions that name several instruments, several years or several event windows are each satisfied in one call per dataset. | NFR-2.1, FR-4.5 |
+| AC-17 | `GET /health` returns exactly `{"status": "ok"}` with HTTP 200, and `submission.json` validates against the organizers' template field names. | FR-1.1, DEP-7 |
 
 ---
 
@@ -257,5 +279,6 @@ Work that cannot be completed until external inputs arrive. Each names what it g
 
 `architecture.md` addresses each requirement group: FR-1 and NFR-4 in *Serving layer*; FR-2 and
 FR-5 in *Role separation* and *Graph design*; FR-3 and FR-4 in *Tool design principles* and
-*Data layer*; NFR-1 to NFR-3 in *Latency and concurrency*; NFR-6 and CON-6 in *Configuration*;
-DEP-1 to DEP-6 in *Deployment*; and the BLK items in *Known limitations*.
+*Data layer*; FR-7 in *Answer precision*; NFR-1 to NFR-3 in *Latency and concurrency*; NFR-6 and
+CON-6 in *Configuration*; DEP-1 to DEP-8 in *Deployment*; and the BLK items in
+*Known limitations*.

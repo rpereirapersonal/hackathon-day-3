@@ -1,4 +1,4 @@
-# Market Signal Agent
+﻿# Market Signal Agent
 
 An evidence-grounded agent that answers Australian financial-market questions over three
 approved local datasets — RBA cash-rate decisions, ASX company prices, and the AFR news
@@ -18,17 +18,34 @@ Stated plainly, because a README that describes unbuilt code is worse than no RE
 
 | Step | Deliverable | Status |
 | --- | --- | --- |
-| 0 | Host preflight — pinned deps on `aarch64`, `onnxruntime` wheel confirmed | Not started |
+| 0 | Host preflight — pinned deps on `aarch64`, `onnxruntime` wheel confirmed | Verified on `win32`/Python 3.13; **`aarch64` still outstanding** (DEP-4) |
 | 1 | Contract and gate — `schemas.py`, `api.py`, `/health`, `/query` stub, tunnel verified off-host | Not started |
 | 2 | Graph skeleton — `state.py`, `context.py`, `graph.py`, orchestrator wired to `synthesize` in mock mode | **In progress** — `state.py`, `context.py`, `config.py`, `models.py` done |
 | 3 | Models and synthesis — live Qwen planning, budget cap, trace recorder, fallback ladder | Not started |
-| 4 | Data layer and tools — `db.py`, `retrieval.py`, `embeddings.py`, `scripts/ingest.py`, `src/tools/` | **Blocked: BLK-2** |
-| 5 | Calibration — public-question harness, per-stage latency | **Blocked: BLK-1** |
+| 4 | Data layer and tools — `text.py`, `ingest.py`, `db.py`, `frames.py`, `retrieval.py`, `embeddings.py`, `src/tools/` | **Done** — 12 tools, 53 tests passing against published reference values |
+| 5 | Calibration — public-question harness, per-stage latency | Not started — unblocked (BLK-1 closed) |
 
-Built and verified today: the Qwen reasoning agent in [`src/orchestrator.py`](src/orchestrator.py),
-its supporting state and context schemas, configuration, and the model factories. Everything
-else in `src/` is a documented placeholder carrying `TODO(build step N)` markers that map to
-the table above.
+Built and verified: the Qwen reasoning agent in [`src/orchestrator.py`](src/orchestrator.py), and
+the whole data layer — ingest, the AFR index, the structured frames, and all twelve tools. The
+remaining placeholders are the serving layer (`api.py`, `schemas.py`, `graph.py`), the synthesis
+node, and the middleware bodies, each carrying `TODO(build step N)` markers that map to the table
+above.
+
+### What the data layer is verified against
+
+Every number below is published in `Participant_Package/public_questions.jsonl` and reproduced
+exactly by `python -m src.ingest` and `pytest`. They are the evidence that the matching and
+calculation conventions match the grader's, rather than merely being self-consistent.
+
+| Capability | Verified against |
+| --- | --- |
+| AFR term counting | 1,452 records / 2020 and 218 / May 2020 for `unemployment`; 369 / 2021 for `QBE`; 3,181 / 2019 for the five-term rate pattern |
+| RBA decision statistics | 175 records, 41 changes, 20 increases, 21 decreases over the full record; 8 cuts across 2011–2013 totalling −2.25 pp, 4.75% → 2.50% |
+| RBA rate in force | 0.10% on 23 Feb 2021, 25 Nov 2021 and 28 Nov 2020 — each set by a decision in the preceding weeks |
+| ASX basket returns | +2.88%, +0.24%, −2.17% over the three 2019 post-decision weeks; +2.37% for 30 Nov – 7 Dec 2020; +20.11% for 2019 |
+| ASX rankings | BHP.AX +22.17% best and AMP.AX −50.04% worst in 2018; QBE.AX +35.57% best in 2021 |
+| ASX statistics | AMP.AX average daily volume 11,635,671.71; the three worst drawdowns with all six peak and trough dates |
+| Dataset dimensions | 18 tickers × 1,774 rows, 2 Jan 2015 – 30 Dec 2021; 219,538 AFR records; 175 RBA decisions |
 
 ---
 
@@ -52,7 +69,7 @@ instance is constructed with no tools at all, so it has no mechanism to emit a t
 `synthesize` node is terminal — its only outgoing edge leads to `package` — so no synthesis
 output can route back into the reasoning loop. The reasoning brain's messages are never
 returned as the `answer` field; `package` reads the answer exclusively from the synthesis
-node's output. `tests/test_role_separation.py` asserts all three.
+node's output. `training/test_role_separation.py` asserts all three.
 
 ### Request flow
 
@@ -82,23 +99,45 @@ packaging concerns live in the outer graph, out of the agent's own control flow.
 
 ### Data flow
 
-Structured data — RBA decisions and ASX prices — is normalised into read-only SQLite, so
-counts, rankings, percentage changes and date arithmetic happen in SQL. The AFR corpus is
-embedded into a vector index for semantic retrieval, so sentiment and market-direction
-questions find relevant articles without exact keyword overlap.
+Storage is split by size, not by dataset. RBA decisions (175 rows) and ASX prices (31,932)
+are small enough to hold resident as pandas frames, so counts, rankings, percentage changes
+and date arithmetic all happen in pandas. The AFR corpus is 780 MB across 219,538 records, so
+its text stays in SQLite behind an FTS5 index and only its metadata — headline, date,
+identifiers — is held in a frame.
 
-`scripts/ingest.py` is the single adapter boundary: all knowledge of raw file layout lives
-there, so when the real schemas arrive that script changes and the tool layer above it does
-not. Ingestion runs ahead of serving, never inside a request (NFR-1.4), and never modifies the
-sources (CON-3).
+`src/ingest.py` is the single adapter boundary: every fact about raw file layout lives there,
+so the tools above it never parse a source file. It runs ahead of serving, never inside a
+request (NFR-1.4), and never modifies the sources (CON-3). Its stages are separable because
+they cost wildly different amounts — the structured frames build in a second, the AFR index in
+about fifty, and encoding 219,538 articles takes roughly an hour and is resumable.
+
+**AFR counting is a two-stage query, and the reason is worth knowing before editing it.**
+Counting is graded against an exact convention: case-insensitive, word-bounded, once per
+record, over the four text fields concatenated, with no deduplication. Two things narrow the
+candidate set — the FTS5 index for word-bounded terms, and a SQL `LIKE` scan for substring
+terms, which cannot use an index because a substring can sit inside a token ("corporate cuts"
+contains "rate cut"). Neither decides the count: a `\b`-anchored regex confirms every
+candidate. Narrowing first is what turns a 61-second full scan into a sub-second query.
+
+Three findings behind that design, each of which silently changes the answer if undone, are
+documented in [`src/text.py`](src/text.py): matching a serialised record instead of the field
+text undercounts `QBE` by fourfold, because `json.dumps` renders newlines as literal `\n` and
+breaks the leading word boundary; the corpus's 37,048 repeated headline-and-date pairs are
+counted, so deduplicating breaks every reference value; and punctuation-stripped matching is
+exact for single tokens but off by −62 or +19 for phrases depending on how they are anchored.
 
 **Determinism is the highest-leverage rule in the system.** Counting, summing, ranking,
-percentage change, date arithmetic and longest-run calculations are all computed in SQL or
-Python and returned as finished values. Neither model performs arithmetic (FR-3.4). Both of
-the brief's §10 worked failures are exactly this kind of error — a retrieval tool asked for a
+percentage change, date arithmetic and longest-run calculations are all computed in pandas or
+SQL and returned as finished values. Neither model performs arithmetic (FR-3.4). Both of the
+brief's §10 worked failures are exactly this kind of error — a retrieval tool asked for a
 structured statistic, and a chronological calculation never actually performed — so the
 orchestrator prompt, the tool docstrings and the test suite each independently defend against
 it.
+
+`python -m src.ingest` ends by asserting the four published AFR reference counts against the
+index it just built and exits non-zero on any mismatch. A wrong convention is the most
+expensive failure available here — every downstream number inherits it, with nothing to signal
+the error — so it cannot be a silent outcome.
 
 ### Serving
 
@@ -128,39 +167,71 @@ src/
   state.py          Graph state: messages plus the tool_trace and steps channels
   context.py        QueryContext: request id, deadline, remaining tool budget. Injected per request
   middleware.py     Tool-budget cap, trace recorder, deadline guard
-  config.py         Environment loading and fail-fast validation
-  db.py             Async SQLite connections, opened read-only, scoped per operation
-  retrieval.py      Semantic search over the AFR corpus
+  config.py         Environment loading, fail-fast validation, and the data-layer paths
+  ingest.py         Builds the AFR index and the structured frames. The single adapter boundary
+  text.py           AFR matching conventions — the one definition of how a record counts
+  db.py             Async read-only SQLite over the AFR index, scoped per operation
+  frames.py         Pandas frames over the ingested artifacts, loaded once per process
+  retrieval.py      AFR index reads: exact counting, article lookup, semantic search
   embeddings.py     Embedding generation, sync encoder kept off the event loop
-  tools/            One module per dataset plus the TOOLS registry          (blocked: BLK-2)
-scripts/ingest.py   Builds SQLite tables and the vector index from source   (blocked: BLK-2)
-docs/               Tool backlog and design notes
-tests/              Contract, role-separation, determinism, budget, concurrency, fallback
-evals/              Calibration harness over the public questions           (blocked: BLK-1)
+  tools/            afr.py, asx.py, rba.py, meta.py, plus the TOOLS registry
+data/               Ingested artifacts, ~1.9 GB. Gitignored, rebuilt by src/ingest.py
+"data set"/         The supplied RBA, ASX and AFR sources. Never written to (CON-3)
 logs/               Per-request diagnostic logs with correlation ids
-training/           Fine-tuning evidence (model workstream)
-Participant_Package/ Sample answer_template.json
+training/           Fine-tuning evidence, the test suite, and the calibration harness
+Participant_Package/ Challenge brief, public questions, and the answer template
+tool-backlog.md     What was built, and what was deliberately left out
 ```
+
+`training/` holds the tests and `run_calibration.py` alongside the fine-tuning evidence, so the
+tree carries only the folders the brief names (§8). It is deliberately not a package — pytest
+collects it by path via `testpaths` in `pyproject.toml`.
 
 ---
 
 ## Running the agent
 
-Requires Python 3.12+. The target host is a Gigabyte Atom (`aarch64`, Linux) reached over SSH;
-the install has not yet been exercised there (build step 0, DEP-4).
+Requires Python 3.12 or 3.13. The target host is a Gigabyte Atom (`aarch64`, Linux) reached over
+SSH; the install has been exercised on `win32`/3.13 but not yet there (build step 0, DEP-4).
+
+**Do not build the venv on Python 3.14.** `pandas` and `fastembed` wheels lag the newest
+interpreter, and a source build of either on the Atom is not a fight worth having.
 
 ### 1. Install
 
+Linux and macOS:
+
 ```bash
 git clone <repository-url> && cd <repository>
-python3 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate
+python -m pip install -U pip
+pip install "fastembed>=0.7,<1.0"     # DEP-4 probe: do this first, on its own
 pip install -r requirements.txt
 ```
 
-On the `aarch64` host, do this **first and on its own** (DEP-4). `fastembed` pulls in
-`onnxruntime`, which is the dependency most likely to lack a wheel for that architecture. If
-it cannot be installed, AFR retrieval falls back to SQLite FTS5 keyword search — weaker
-recall, no native dependency, same tool signatures, critical path unblocked.
+Windows (PowerShell):
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip
+pip install -r requirements.txt
+```
+
+Installing `fastembed` **first and on its own** on the `aarch64` host is deliberate (DEP-4). It
+pulls in `onnxruntime`, the one dependency in the set likely to lack a wheel for that
+architecture, and finding that out in isolation is much clearer than watching a combined install
+fail. If it cannot be installed, `afr_search` is the only capability lost: the ten other tools —
+including all exact AFR counting — use SQLite FTS5 and pandas, neither of which has a native
+dependency. No public question requires semantic search, so the critical path stays intact.
+
+`sqlite3` ships with Python, but **FTS5 is a compile-time option rather than a guarantee**.
+`src/ingest.py` probes for it before doing any work and fails with an actionable message if it is
+missing. Run the probe on the host during step 0, not on ingest day:
+
+```bash
+python -c "import sqlite3; sqlite3.connect(':memory:').execute('create virtual table t using fts5(b)'); print('FTS5 OK')"
+```
 
 ### 2. Configure
 
@@ -182,13 +253,23 @@ export DOMAIN_FT_API_KEY=...
 | `DOMAIN_FT_MODEL` / `_BASE_URL` / `_API_KEY` | The team's fine-tuned Nemotron synthesis model |
 | `DOMAIN_PREDICT_MODE` | `mock` for pre-adapter integration testing, `llm` for real inference |
 | `REQUEST_DEADLINE_SECONDS` | Hard per-request wall-clock budget (default 50) |
-| `MAX_TOOL_CALLS` | Hard tool-call cap (default 3) |
-| `DATA_DIR` / `DB_PATH` / `INDEX_PATH` | Locations of ingested artifacts |
+| `MAX_TOOL_CALLS` | Hard tool-call cap (default 5) |
+| `SOURCE_DATA_DIR` | The supplied datasets. Read-only (default `./data set`) |
+| `DATA_DIR` | Where ingested artifacts are written (default `./data`) |
 | `EMBEDDING_MODEL_NAME` / `EMBEDDING_CACHE_DIR` | Retrieval model selection and local cache |
 | `LOG_DIR` | Diagnostic log destination |
 
 `config.py` fails fast on a missing model alias or base URL rather than falling back to a
-default that would silently point at the wrong model.
+default that would silently point at the wrong model. The data-layer paths default instead,
+because a wrong path surfaces immediately as a missing-file error while a wrong model alias
+would quietly produce a scored answer from the wrong model.
+
+**On the tool cap being 5, not 3.** The prompt still targets ≤3 calls and most questions need
+one or two. But the hardest cross-dataset questions genuinely need three *different* datasets —
+an article, the cash-rate target in force, and a basket return — and a cap of 3 leaves no room
+for the single adaptive retry the fallback ladder promises after a failed call. Latency is not
+the constraint: all twelve tools are indexed reads, not model calls. The brief's warning is
+about exceeding five.
 
 > **`DOMAIN_PREDICT_MODE=llm` before official evaluation.** The cluster bootstrap starts in
 > `mock`. Shipping in `mock` returns plausible answers while forfeiting the fine-tuned-model
@@ -198,10 +279,35 @@ default that would silently point at the wrong model.
 ### 3. Ingest the datasets
 
 ```bash
-python -m scripts.ingest        # blocked: BLK-2
+python -m src.ingest
 ```
 
-Run once, before serving. Never inside a request.
+Run once, before serving. Never inside a request. The stages are separable, which matters
+because they cost very different amounts:
+
+```bash
+python -m src.ingest --stage structured   # RBA + ASX + coverage frames — about a second
+python -m src.ingest --stage afr          # AFR body, FTS5 index, metadata — about 50 seconds
+python -m src.ingest --stage embeddings   # 219,538 article vectors — about an hour, resumable
+python -m src.ingest --verify             # re-check the reference counts against an existing index
+```
+
+Run the AFR stage before `--stage structured`, since the coverage frame reads the AFR metadata.
+The embedding pass writes into a memmapped `.npy` and records progress in a sidecar file, so an
+interrupted run resumes where it stopped rather than starting over.
+
+Artifacts land in `DATA_DIR` and total about 1.9 GB:
+
+| Artifact | Contents |
+| --- | --- |
+| `afr.sqlite` | Article text plus the FTS5 index over it, `id` aligned to the metadata frame |
+| `afr_meta.parquet` | 219,538 rows of headline, normalised headline, date, year, month |
+| `afr_vectors.npy` | `float32[219538, 384]`, L2-normalised, row `i` describing `id == i + 1` |
+| `asx.parquet` | 31,932 daily price rows across 18 tickers, with company names |
+| `rba.parquet` | 175 decisions with signed changes and a derived direction |
+| `coverage.parquet` | Row counts and date spans, measured rather than asserted |
+
+Every run ends with the reference-count check and exits non-zero if it fails.
 
 ### 4. Serve
 
@@ -292,12 +398,19 @@ Against the brief's bands — ≤60s full points, 61–300s a 20% penalty, >300s
 
 | Stage | Target | Mechanism |
 | --- | --- | --- |
-| Warm-up | before healthy | ingest at build time; embedding model loaded at import |
+| Warm-up | before healthy | ingest at build time; frames and encoder warmed at startup |
 | Planning + tools | ≤ 30s | ≤3 tool calls targeted; hard cap and recursion limit enforced in middleware |
 | Synthesis | ≤ 15s | bounded output length; no re-entry into the tool loop |
 | Wall clock | ≤ 50s soft, hard deadline above it | per-request timeout, then the degraded path |
 
 The 50s soft target leaves headroom inside the 60s band for network and tunnel overhead.
+
+Measured tool latency, on the development host: the four AFR reference counts return in 0.16s,
+0.05s, 0.18s and 1.1s. The last is the five-term rate pattern, where four substring terms force
+a `LIKE` scan; a Python pass over the same corpus takes 61s, which is the whole planning budget
+for one call. Structured RBA and ASX calls are pandas operations over resident frames and are
+sub-millisecond. Semantic search is a 219,538 × 384 matmul, tens of milliseconds, plus one query
+encode. The remaining unknown is model latency at both ends (BLK-3, BLK-4).
 
 The harness sends up to three questions concurrently. No mutable module-level state
 participates in request handling; connections are scoped per operation rather than shared;
@@ -312,27 +425,31 @@ synchronous embedding encoder runs off the event loop.
 pytest
 ```
 
-Tests never contact a live model, so they are fast and work while the gateway credentials are
-outstanding. A scripted fake chat model drives the reasoning loop deterministically, which
-makes graph structure, tool sequencing and termination testable without a gateway.
+Tests live in `training/` and never contact a live model, so they are fast and work while the
+gateway credentials are outstanding.
 
-**The test modules below are currently stubs** — each carries the specific assertions it owns
-as `TODO(build step N)` comments, landing with the code it covers. `pytest` collects them and
-passes trivially today.
+53 tests pass. The determinism and routing modules are implemented; the rest still carry their
+assertions as `TODO(build step N)` comments and land with the code they cover.
 
-| File | Covers |
-| --- | --- |
-| `tests/test_contract.py` | `/health` under a broken gateway; `/query` under malformed input, tool failure, budget exhaustion, deadline expiry — every case asserting 200 with a valid non-empty `answer` |
-| `tests/test_role_separation.py` | The synthesis model is bound with no tools; the answer originates from the synthesis node, not the reasoning brain |
-| `tests/test_determinism.py` | Calculation helpers directly against known inputs, no model in the loop — including chronological and longest-run logic |
-| `tests/test_budget_and_deadline.py` | A question exceeding the tool budget terminates at the cap and still answers; a slowed pipeline degrades rather than overruns |
-| `tests/test_concurrency.py` | Three simultaneous requests, correctly matched, with no `tool_trace` cross-contamination |
-| `tests/test_orchestrator.py` | Routing — a question asking for an RBA count drives a structured tool call, not an AFR retrieval call |
+| File | Covers | Status |
+| --- | --- | --- |
+| `training/test_determinism.py` | Every tool called directly against a published reference value — AFR counts, RBA statistics and rate-in-force, ASX returns, rankings, volume, drawdowns, coverage. No model in the loop | **42 tests** |
+| `training/test_orchestrator.py` | The registry is populated, names are unique, and each tool's description disclaims what it cannot do and names the tool that can | **11 tests** |
+| `training/test_contract.py` | `/health` under a broken gateway; `/query` under malformed input, tool failure, budget exhaustion, deadline expiry — every case asserting 200 with a valid non-empty `answer` | stub (step 1) |
+| `training/test_role_separation.py` | The synthesis model is bound with no tools; the answer originates from the synthesis node, not the reasoning brain | stub (step 3) |
+| `training/test_budget_and_deadline.py` | A question exceeding the tool budget terminates at the cap and still answers; a slowed pipeline degrades rather than overruns | stub (step 3) |
+| `training/test_concurrency.py` | Three simultaneous requests, correctly matched, with no `tool_trace` cross-contamination | stub (step 1) |
+
+Every expectation in `test_determinism.py` is a value published in `public_questions.jsonl`, not
+a figure this implementation produced and then enshrined. That direction is the point: a test
+written against its own output proves consistency, not correctness. Expectations are keyed by
+tool arguments, and no question id appears in the file (CON-9, AC-13). The module skips itself
+when the ingested artifacts are absent, so a clean checkout still collects and passes.
 
 ### Calibration
 
 ```bash
-python -m evals.run_calibration        # blocked: BLK-1
+python training/run_calibration.py
 ```
 
 Runs the 15 public questions, passing **only** the `prompt` field, and records per-component
@@ -363,16 +480,29 @@ cannot become the primary tool-calling model.
 
 ## Known limitations
 
-- **Dataset schemas are unverified.** The tool layer and ingestion script are specified by
-  capability, not against real files (BLK-2). No column name, instrument identifier or date
-  format is asserted anywhere in this repository. Tool signatures will shift on first contact
-  with the data. Ranked candidates are in [`docs/tool-backlog.md`](docs/tool-backlog.md).
-- **No calibration run yet.** The latency budget above is a design allocation, not a
-  measurement. Per-stage timings on the target hardware are needed to confirm the 50s target
-  is realistic (BLK-1).
-- **Retrieval recall is unmeasured.** Semantic search quality over the AFR corpus is unknown
-  until the corpus exists. Sentiment and market-direction questions depend on it, and the FTS5
-  fallback would be materially weaker.
+- **The serving layer is not built.** `api.py`, `schemas.py`, `graph.py`, `synthesis.py` and the
+  middleware bodies are still stubs, so nothing is reachable over HTTP yet. Every tool is
+  callable and tested directly; none of them has been exercised through a request.
+- **No end-to-end calibration run yet.** Tool latency is measured, but per-stage request timings
+  on the target hardware are not, so the 50s target remains an allocation rather than a
+  measurement. `run_calibration.py` is unblocked and unimplemented.
+- **Retrieval recall is unmeasured.** Exact counting is verified against published values, but
+  semantic search quality has no reference answer to check against, since no public question
+  needs it. That also bounds the risk: `afr_search` is insurance for hidden topical questions,
+  and every graded AFR capability works without it.
+- **One vector per article, from its opening 320 characters.** A question turning on an argument
+  made only in the closing paragraphs of a long column may not retrieve it. Chunking the full
+  text would fix that at roughly 1.5–2M chunks and multiple hours of encoding, which is hard to
+  justify for a capability no published question requires.
+- **The published RBA span and the supplied file disagree.** The supplied `RBA-rates.csv` holds
+  175 decisions running to June 2026, while the public reference answer for the coverage
+  question describes the RBA data as ending in November 2023. The row count matches, so this is
+  the same file described against a different snapshot. `dataset_coverage` reports what is
+  actually present, which is the honest answer, and the load-bearing claim — that AFR and ASX
+  both stop in 2021 — is reproduced exactly. Worth raising with the organizers.
+- **92 AFR records carry no publication date.** They are kept and count toward unscoped totals,
+  but no date-bounded or grouped query can include them. All four published reference counts are
+  date-scoped, so none is affected; an unscoped count would include them.
 - **`mock` mode remains a live footgun.** The mitigations are procedural — a startup warning,
   the mode echoed in `/health`, a checklist item. A submission left in `mock` would return
   plausible answers while forfeiting the fine-tuned-model evidence.
@@ -398,3 +528,5 @@ cannot become the primary tool-calling model.
 - [ ] `Participant_Package/answer_template.json` present and valid
 - [ ] `training/` contains reproducible fine-tuning evidence
 - [ ] Setup instructions succeed from a clean checkout on the `aarch64` host
+- [ ] `python -m src.ingest --verify` reproduces all four published AFR reference counts on the host
+- [ ] `pytest` passes on the host with the ingested artifacts present

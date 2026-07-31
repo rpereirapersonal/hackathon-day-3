@@ -19,7 +19,15 @@ from __future__ import annotations
 
 # TODO(build step 1): app = FastAPI(...)
 #
+# On startup, before the app reports healthy, call src.frames.warm() and
+# src.embeddings.warm(). Both are idempotent and both log rather than raise on a
+# missing artifact, so a partial ingest degrades /query answers instead of
+# taking down the health gate (NFR-1.4, NFR-4.2). Paying the parquet load and
+# the encoder construction here is what keeps them out of the request path.
+#
 # GET /health   -> 200 with a small static body. No upstream calls, ever.
+# Echo DOMAIN_PREDICT_MODE in the body so a submission left in `mock` is
+# visible at a glance (FR-5.5, AC-12).
 #
 # POST /query:
 #   1. Validate against schemas.QueryRequest; assign a request id.

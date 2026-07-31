@@ -5,7 +5,7 @@ these models, so no path can drift out of shape (FR-1.3, FR-1.5, CON-4).
 
 TODO(build step 1): implement. Validate the shape against the organizers'
 ``validate.json`` and ``answer_template.json`` once the Participant Package
-arrives (BLK-1, AC-9).
+arrives (AC-9).
 """
 
 from __future__ import annotations

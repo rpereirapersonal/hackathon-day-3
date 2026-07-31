@@ -218,11 +218,18 @@ __marimo__/
 .streamlit/secrets.toml
 
 # --- Project-specific ---
-# Ingested artifacts, rebuilt by scripts/ingest.py (BLK-2). Never committed:
-# they are derived, large, and the source datasets must not be redistributed.
+# Ingested artifacts, rebuilt by `python -m src.ingest`. Never committed: they
+# are derived, large (~1.9 GB), and the source datasets must not be
+# redistributed.
 data/*
 !data/.gitkeep
 !data/README.md
+afr_fts.sqlite
+*.parquet
+*.npy
+
+# Embedding model cache — downloaded on first use, never committed.
+.cache/
 
 # Diagnostic logs. Curated non-sensitive traces for logs/ are added explicitly
 # with `git add -f` before submission (brief §8); the raw stream is not.

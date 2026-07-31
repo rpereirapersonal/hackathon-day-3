@@ -1,26 +1,31 @@
 """Tool registry — the single list bound to the reasoning brain.
 
-**Blocked: BLK-2.** No tool is implemented yet, because no column name,
-instrument identifier or date format is asserted anywhere in this repository
-until the real RBA / ASX / AFR files are in hand. ``TOOLS`` is deliberately
-empty rather than speculative: an empty registry makes the gap obvious at
-startup (``orchestrator.build_orchestrator`` logs a warning), whereas a tool
-built against a guessed schema would fail silently at evaluation time.
+Ordering is the model's reading order, so the highest-value capability comes
+first within each dataset group, and the coverage tool sits at the top: it is
+the cheapest way to establish whether a question is answerable at all before
+anything else is attempted.
 
-Build order and rationale for each planned tool live in
-``docs/tool-backlog.md``. The settled design principles — async, compact
-evidence rather than data dumps, bounded arguments, deterministic maths in SQL
-or Python, no unbounded scans, errors returned as results, read-only access —
-are in ``architecture.md`` §5 and will not change when the data arrives.
+Twelve tools is already past the point where routing stays comfortable under a
+tight call budget, which is why near-duplicates were deliberately not built.
+There is no separate "price on a date" tool alongside ``asx_return``, no generic
+SQL passthrough, and no calculator — if a model needs a calculator, the wrong
+tool was called, because the statistic belongs in the tool that already has the
+rows. The pressure runs the other way too: ``asx_return`` takes several window
+start dates in one call, and ``rba_decision_stats`` groups by year, precisely so
+multi-period questions do not need a call apiece.
+Design rules for all of them are in ``architecture.md`` §5; the ranked backlog of
+what was built and what was deliberately deferred is in ``tool-backlog.md``.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-# TODO(build step 4): populate from src/tools/rba.py, asx.py and afr.py once
-# the dataset schemas are known (BLK-2). Ordering matters only for the model's
-# reading of the tool list; keep the highest-value capability first.
-TOOLS: tuple[Any, ...] = ()
+from src.tools.afr import AFR_TOOLS
+from src.tools.asx import ASX_TOOLS
+from src.tools.meta import META_TOOLS
+from src.tools.rba import RBA_TOOLS
+
+TOOLS: tuple[Any, ...] = (*META_TOOLS, *RBA_TOOLS, *ASX_TOOLS, *AFR_TOOLS)
 
 __all__ = ["TOOLS"]

@@ -1,10 +1,16 @@
 """Calibration harness over the 15 public questions.
 
-**Blocked: BLK-1** (Participant Package not yet supplied) and **BLK-2**.
+Unblocked — the Participant Package and all three datasets are present, and the
+tool layer is verified. What remains is the serving layer: this harness posts to
+``/query``, which does not exist yet (build step 1).
 
 Converts the latency budget in ``architecture.md`` §7 from a design allocation
 into a measurement, and the routing rules in ``orchestrator.py`` from an
 intention into a score.
+
+Run by path, not as a module — ``training/`` is deliberately not a package::
+
+    python training/run_calibration.py
 
 Two rules that are easy to violate and expensive to violate:
   - Pass **only** the ``prompt`` field to the agent. Nothing else from

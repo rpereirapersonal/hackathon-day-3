@@ -12,8 +12,16 @@ fastapi~=0.136
 uvicorn[standard]~=0.38
 pydantic~=2.9
 
-# Data layer (BLK-2)
+# Data layer.
+# aiosqlite  — async read-only access to the AFR FTS5 index.
+# pandas     — RBA / ASX / AFR-metadata frames, loaded from parquet at import.
+# pyarrow    — parquet engine for those frames.
+# numpy      — memmapped AFR vectors and the retrieval matmul (no FAISS needed).
+# fastembed  — the only native dependency in the set; see the DEP-4 note above.
 aiosqlite~=0.22
+pandas>=2.2,<3
+pyarrow>=17,<21
+numpy>=1.26,<3
 fastembed>=0.7,<1.0
 
 pytest~=8.3

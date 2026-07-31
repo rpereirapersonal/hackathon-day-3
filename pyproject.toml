@@ -9,8 +9,10 @@ dynamic = ["dependencies"]
 dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools]
-packages = ["src", "src.tools", "evals"]
+packages = ["src", "src.tools"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+# Tests and the calibration harness both live in training/, which is
+# deliberately not a package — pytest collects it by path (brief §8 folder set).
+testpaths = ["training"]
